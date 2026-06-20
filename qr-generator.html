@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QR Generator — Print Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+<style>
+  :root{
+    --paper:#FAF6EC;
+    --paper-deep:#F1EADA;
+    --ink:#1C1A17;
+    --grey:#948D82;
+    --line:#D9D1C0;
+    --stamp:#C0392B;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper-deep);
+    font-family:'JetBrains Mono', monospace;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 16px;
+  }
+  h1{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:26px;
+    margin:0 0 4px;
+  }
+  p.sub{
+    font-size:11px;
+    color:var(--grey);
+    margin:0 0 24px;
+    text-align:center;
+    max-width:340px;
+  }
+  .controls{
+    width:100%;
+    max-width:380px;
+    margin-bottom:28px;
+  }
+  label{
+    font-size:10.5px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--grey);
+    display:block;
+    margin-bottom:6px;
+  }
+  input[type=text]{
+    width:100%;
+    padding:11px 12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    border:2px solid var(--ink);
+    background:var(--paper);
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .btn-row{ display:flex; gap:10px; }
+  button{
+    flex:1;
+    padding:13px;
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:1px;
+    border:none;
+    cursor:pointer;
+  }
+  #generateBtn{ background:var(--ink); color:var(--paper); }
+  #printBtn{ background:var(--stamp); color:var(--paper); }
+
+  /* ---- Printable ticket ---- */
+  #printArea{
+    background:var(--paper);
+    width:340px;
+    padding:30px 24px 26px;
+    text-align:center;
+    box-shadow: 0 18px 40px -12px rgba(28,26,23,0.18);
+  }
+  #printArea h2{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:24px;
+    margin:0 0 2px;
+  }
+  #printArea .tagline{
+    font-size:10.5px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin:0 0 18px;
+  }
+  #qrCanvas{
+    display:flex;
+    justify-content:center;
+    margin:0 auto 18px;
+  }
+  #printArea .howto{
+    font-size:10.5px;
+    line-height:1.7;
+    color:var(--ink);
+    border-top:2px dashed var(--line);
+    padding-top:14px;
+    text-align:left;
+  }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{
+      position:absolute;
+      top:0; left:0;
+      box-shadow:none;
+      width:100%;
+    }
+    .controls, h1, p.sub{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+  <h1>QR Code Generator</h1>
+  <p class="sub">Apni shop ki Vercel website ka link daalo, QR generate karo, aur print karke counter pe laga do.</p>
+
+  <div class="controls">
+    <label>Shop website URL</label>
+    <input type="text" id="urlInput" placeholder="https://yourshop.vercel.app" />
+    <div class="btn-row">
+      <button id="generateBtn">Generate QR</button>
+      <button id="printBtn">Print</button>
+    </div>
+  </div>
+
+  <div id="printArea">
+    <h2 id="shopTitle">QR Print Shop</h2>
+    <p class="tagline">scan · upload · printed</p>
+    <div id="qrCanvas"></div>
+    <div class="howto">
+      1. Phone se yeh QR scan karo<br/>
+      2. Apna PDF select karo<br/>
+      3. Page count aur price check karo<br/>
+      4. "Send to Print" daba do<br/>
+      5. Counter pe wait karo — print taiyar!
+    </div>
+  </div>
+
+<script>
+  let qrCode = null;
+
+  function renderQR(url){
+    document.getElementById('qrCanvas').innerHTML = '';
+    qrCode = new QRCodeStyling({
+      width: 220,
+      height: 220,
+      type: 'svg',
+      data: url || 'https://example.com',
+      dotsOptions: { color: '#1C1A17', type: 'rounded' },
+      backgroundOptions: { color: '#FAF6EC' },
+      cornersSquareOptions: { type: 'extra-rounded', color: '#1C1A17' },
+      cornersDotOptions: { type: 'dot', color: '#C0392B' }
+    });
+    qrCode.append(document.getElementById('qrCanvas'));
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) { alert('Pehle apni website ka URL daalo'); return; }
+    renderQR(url);
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+  });
+
+  // Default preview QR so the page isn't empty on load
+  renderQR('https://yourshop.vercel.app');
+</script>
+
+</body>
+</html>
