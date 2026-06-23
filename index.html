@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-<title>Cheetah Cyber Cafe</title>
+<title>QR Print Shop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -302,11 +302,10 @@
     <div class="status" id="status"></div>
   </div>
 
+  <p class="footer-note">Powered by QR Print Shop System</p>
 
 <script>
-  // ============================================
-  // CONFIG — sirf price aur shop naam yahan hai
-  // Token/Chat ID ab server pe hain (api/send-order.js)
+
   // ============================================
   const CONFIG = {
     PRICE_PER_PAGE: 5,       // ₹ per page
@@ -447,23 +446,22 @@
       `Rate: ₹${CONFIG.PRICE_PER_PAGE}/page\n` +
       `Total: ₹${total}`;
 
-    const replyMarkup = {
-      inline_keyboard: [[
-        { text: '🖨 PRINT', callback_data: 'print' },
-        { text: '❌ REJECT', callback_data: 'reject' }
-      ]]
-    };
 
-    const formData = new FormData();
-    formData.append('document', mergedFile, mergedFile.name);
-    formData.append('caption', caption);
-    formData.append('reply_markup', JSON.stringify(replyMarkup));
+    const arrayBuffer = await mergedFile.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    let binary = '';
+    uint8.forEach(b => binary += String.fromCharCode(b));
+    const fileBase64 = btoa(binary);
 
     try {
-      // Token server pe hai — /api/send-order ko call karo, Telegram ko nahi
       const res = await fetch('/api/send-order', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileBase64,
+          fileName: mergedFile.name,
+          caption
+        })
       });
       const data = await res.json();
 
