@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>Cheetah Cyber Cafe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+
+  /* ================== CONFIG — yahan apni details bharo ================== */
+  /* NOTE: yeh wahi values honi chahiye jo config.js mein hain */
+
+  :root{
+    --paper:#FAF6EC;
+    --paper-deep:#F1EADA;
+    --ink:#1C1A17;
+    --grey:#948D82;
+    --line:#D9D1C0;
+    --stamp:#C0392B;
+    --toner:#3F7D5C;
+    --shadow: rgba(28,26,23,0.18);
+  }
+
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(28,26,23,0.06) 1px, transparent 1px) 0 0/14px 14px,
+      var(--paper-deep);
+    font-family:'JetBrains Mono', monospace;
+    color:var(--ink);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px 80px;
+  }
+
+  .ticket{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    background:var(--paper);
+    box-shadow: 0 18px 40px -12px var(--shadow), 0 2px 0 rgba(28,26,23,0.05);
+    padding:34px 28px 30px;
+  }
+
+  .ticket::before, .ticket::after{
+    content:'';
+    position:absolute;
+    left:0; right:0;
+    height:22px;
+    background-image: radial-gradient(circle, var(--paper-deep) 10px, transparent 11px);
+    background-size: 26px 26px;
+    background-position: -7px center;
+    background-repeat: repeat-x;
+  }
+  .ticket::before{ top:-11px; }
+  .ticket::after{ bottom:-11px; }
+
+  .stamp-badge{
+    width:46px; height:46px;
+    border:3px solid var(--ink);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:20px;
+    transform:rotate(-8deg);
+    margin-bottom:10px;
+  }
+
+  h1{
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:34px;
+    letter-spacing:0.5px;
+    margin:0 0 2px;
+    line-height:0.95;
+  }
+
+  .tagline{
+    font-size:11px;
+    letter-spacing:2.5px;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin:0 0 18px;
+  }
+
+  .divider{
+    border:none;
+    border-top:2px dashed var(--line);
+    margin:18px 0;
+  }
+
+  .dropzone{
+    border:2px dashed var(--ink);
+    background:var(--paper-deep);
+    padding:26px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition: background 0.15s ease;
+  }
+  .dropzone:hover{ background:#ECE3CF; }
+  .dropzone.has-file{ border-style:solid; border-color:var(--toner); }
+
+  .dropzone-icon{ margin-bottom:8px; display:flex; justify-content:center; }
+  .dropzone-icon svg{ width:28px; height:28px; display:block; }
+  .dropzone-label{ font-size:12.5px; letter-spacing:0.5px; display:block; line-height:1.4; }
+  .dropzone-sub{ font-size:10.5px; color:var(--grey); margin-top:4px; display:block; line-height:1.4; }
+
+  #fileInput{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
+  .filename{
+    margin-top:10px;
+    font-size:12px;
+    color:var(--toner);
+    word-break:break-all;
+    display:none;
+  }
+
+  .file-list{
+    margin-top:12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .file-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:var(--paper-deep);
+    padding:8px 10px;
+    font-size:11.5px;
+  }
+  .file-row .fnum{
+    color:var(--grey);
+    flex-shrink:0;
+  }
+  .file-row .fname{
+    flex:1;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .file-row .fpages{
+    color:var(--grey);
+    flex-shrink:0;
+    font-variant-numeric: tabular-nums;
+  }
+  .file-row .remove{
+    color:var(--stamp);
+    font-weight:700;
+    cursor:pointer;
+    flex-shrink:0;
+    padding:0 2px;
+  }
+
+  .receipt-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13px;
+    padding:5px 0;
+  }
+  .receipt-row .label{
+    color:var(--grey);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    font-size:10.5px;
+  }
+  .receipt-row .value{
+    font-weight:700;
+    font-variant-numeric: tabular-nums;
+  }
+  .receipt-row.total{
+    margin-top:6px;
+    padding-top:12px;
+    border-top:1px solid var(--ink);
+  }
+  .receipt-row.total .label{ color:var(--ink); font-size:12px; }
+  .receipt-row.total .value{ font-size:26px; font-family:'Big Shoulders Display', sans-serif; }
+
+  .notice{
+    font-size:10.5px;
+    color:var(--grey);
+    line-height:1.5;
+    margin-top:14px;
+  }
+
+  button.print-btn{
+    width:100%;
+    margin-top:22px;
+    padding:16px;
+    background:var(--stamp);
+    color:var(--paper);
+    border:none;
+    font-family:'Big Shoulders Display', sans-serif;
+    font-weight:800;
+    font-size:20px;
+    letter-spacing:1.5px;
+    cursor:pointer;
+    transform:rotate(-0.4deg);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  button.print-btn:active{
+    transform: translate(2px,2px) rotate(-0.4deg);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+  button.print-btn:disabled{
+    background:var(--grey);
+    box-shadow:none;
+    cursor:not-allowed;
+    transform:none;
+  }
+
+  .status{
+    margin-top:14px;
+    font-size:11.5px;
+    text-align:center;
+    min-height:14px;
+    letter-spacing:0.3px;
+  }
+  .status.ok{ color:var(--toner); }
+  .status.err{ color:var(--stamp); }
+  .status.busy{ color:var(--grey); }
+
+  .footer-note{
+    text-align:center;
+    margin-top:24px;
+    font-size:9.5px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--grey);
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="ticket">
+    <div class="stamp-badge">QR</div>
+    <h1 id="shopName">QR Print Shop</h1>
+    <p class="tagline">tap · upload · printed</p>
+
+    <hr class="divider" />
+
+    <label class="dropzone" id="dropzone" for="fileInput">
+      <span class="dropzone-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 2H14L19 7V20C19 21.1046 18.1046 22 17 22H6C4.89543 22 4 21.1046 4 20V4C4 2.89543 4.89543 2 6 2Z" stroke="#1C1A17" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M14 2V7H19" stroke="#1C1A17" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M8 13H15" stroke="#1C1A17" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M8 16.5H15" stroke="#1C1A17" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="dropzone-label" id="dropzoneLabel">Tap to choose your PDF(s)</span>
+      <span class="dropzone-sub">You can select multiple files · .pdf only</span>
+    </label>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple />
+    <div class="file-list" id="fileList"></div>
+
+    <hr class="divider" />
+
+    <div class="receipt-row">
+      <span class="label">Files</span>
+      <span class="value" id="fileCount">0</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Pages</span>
+      <span class="value" id="pageCount">—</span>
+    </div>
+    <div class="receipt-row">
+      <span class="label">Rate</span>
+      <span class="value" id="rate">—</span>
+    </div>
+    <div class="receipt-row total">
+      <span class="label">Total</span>
+      <span class="value" id="total">₹0</span>
+    </div>
+
+    <p class="notice">Note: printing is black &amp; white only. If you select multiple PDFs, they'll be combined into one print order in the order you added them. Make sure your files look correct before sending.</p>
+
+    <button class="print-btn" id="sendBtn" disabled>Send to Print</button>
+    <div class="status" id="status"></div>
+  </div>
+
+
+<script>
+  // ============================================
+  // CONFIG — sirf price aur shop naam yahan hai
+  // Token/Chat ID ab server pe hain (api/send-order.js)
+  // ============================================
+  const CONFIG = {
+    PRICE_PER_PAGE: 5,       // ₹ per page
+    SHOP_NAME: "QR Print Shop"
+  };
+  // ============================================
+
+  document.getElementById('shopName').textContent = CONFIG.SHOP_NAME;
+  document.getElementById('rate').textContent = `₹${CONFIG.PRICE_PER_PAGE}/page`;
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const fileInput = document.getElementById('fileInput');
+  const dropzone = document.getElementById('dropzone');
+  const dropzoneLabel = document.getElementById('dropzoneLabel');
+  const fileListEl = document.getElementById('fileList');
+  const fileCountEl = document.getElementById('fileCount');
+  const pageCountEl = document.getElementById('pageCount');
+  const totalEl = document.getElementById('total');
+  const sendBtn = document.getElementById('sendBtn');
+  const statusEl = document.getElementById('status');
+
+  let selectedFiles = []; // [{ id, file, pages }]
+  let nextId = 1;
+
+  function setStatus(text, kind){
+    statusEl.textContent = text || '';
+    statusEl.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function totalPages(){
+    return selectedFiles.reduce((sum, f) => sum + f.pages, 0);
+  }
+
+  function renderList(){
+    fileListEl.innerHTML = '';
+    selectedFiles.forEach((entry, i) => {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      row.innerHTML = `
+        <span class="fnum">${i + 1}.</span>
+        <span class="fname">${entry.file.name}</span>
+        <span class="fpages">${entry.pages}p</span>
+        <span class="remove" data-id="${entry.id}">✕</span>
+      `;
+      fileListEl.appendChild(row);
+    });
+
+    const count = selectedFiles.length;
+    fileCountEl.textContent = count;
+    dropzone.classList.toggle('has-file', count > 0);
+    dropzoneLabel.textContent = count > 0 ? 'Tap to add another PDF' : 'Tap to choose your PDF(s)';
+
+    if (count > 0) {
+      pageCountEl.textContent = totalPages();
+      totalEl.textContent = `₹${totalPages() * CONFIG.PRICE_PER_PAGE}`;
+      sendBtn.disabled = false;
+    } else {
+      pageCountEl.textContent = '—';
+      totalEl.textContent = '₹0';
+      sendBtn.disabled = true;
+    }
+  }
+
+  fileListEl.addEventListener('click', (e) => {
+    const id = e.target.getAttribute('data-id');
+    if (!id) return;
+    selectedFiles = selectedFiles.filter(f => String(f.id) !== id);
+    renderList();
+    setStatus(selectedFiles.length ? 'Ready to send' : '', selectedFiles.length ? 'ok' : '');
+  });
+
+  fileInput.addEventListener('change', async (e) => {
+    const newFiles = Array.from(e.target.files || []);
+    fileInput.value = ''; // allows re-selecting / adding more later
+    if (!newFiles.length) return;
+
+    setStatus('Reading PDF(s)...', 'busy');
+    sendBtn.disabled = true;
+
+    for (const file of newFiles) {
+      try {
+        const buffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        selectedFiles.push({ id: nextId++, file, pages: pdf.numPages });
+      } catch (err) {
+        console.error(err);
+        setStatus(`Could not read "${file.name}" — skipped.`, 'err');
+      }
+    }
+
+    renderList();
+    if (selectedFiles.length) {
+      setStatus('Ready to send', 'ok');
+    }
+  });
+
+  sendBtn.addEventListener('click', async () => {
+    if (!selectedFiles.length) return;
+
+    sendBtn.disabled = true;
+    setStatus(selectedFiles.length > 1 ? 'Combining your PDFs...' : 'Preparing your order...', 'busy');
+
+    let mergedFile;
+    try {
+      if (selectedFiles.length === 1) {
+        mergedFile = selectedFiles[0].file;
+      } else {
+        const mergedPdf = await PDFLib.PDFDocument.create();
+        for (const entry of selectedFiles) {
+          const bytes = await entry.file.arrayBuffer();
+          const src = await PDFLib.PDFDocument.load(bytes);
+          const copiedPages = await mergedPdf.copyPages(src, src.getPageIndices());
+          copiedPages.forEach(p => mergedPdf.addPage(p));
+        }
+        const mergedBytes = await mergedPdf.save();
+        mergedFile = new File([mergedBytes], `combined_${selectedFiles.length}_files.pdf`, { type: 'application/pdf' });
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('Could not combine the PDFs. Try removing one and retry.', 'err');
+      sendBtn.disabled = false;
+      return;
+    }
+
+    setStatus('Sending your order...', 'busy');
+
+    const pages = totalPages();
+    const total = pages * CONFIG.PRICE_PER_PAGE;
+    const fileListText = selectedFiles.map((f, i) => `${i + 1}. ${f.file.name} (${f.pages}p)`).join('\n');
+
+    const caption =
+      `🖨 NEW PRINT ORDER\n` +
+      (selectedFiles.length > 1
+        ? `Files (${selectedFiles.length}):\n${fileListText}\n\n`
+        : `File: ${selectedFiles[0].file.name}\n`) +
+      `Total Pages: ${pages}\n` +
+      `Rate: ₹${CONFIG.PRICE_PER_PAGE}/page\n` +
+      `Total: ₹${total}`;
+
+    const replyMarkup = {
+      inline_keyboard: [[
+        { text: '🖨 PRINT', callback_data: 'print' },
+        { text: '❌ REJECT', callback_data: 'reject' }
+      ]]
+    };
+
+    const formData = new FormData();
+    formData.append('document', mergedFile, mergedFile.name);
+    formData.append('caption', caption);
+    formData.append('reply_markup', JSON.stringify(replyMarkup));
+
+    try {
+      // Token server pe hai — /api/send-order ko call karo, Telegram ko nahi
+      const res = await fetch('/api/send-order', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        setStatus('✅ Order sent! Wait for it to print at the counter.', 'ok');
+      } else {
+        console.error(data);
+        setStatus('Could not send order. Please tell the shop owner.', 'err');
+        sendBtn.disabled = false;
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('Network error. Check your internet and try again.', 'err');
+      sendBtn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>
